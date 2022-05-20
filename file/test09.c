@@ -5,7 +5,7 @@ print(arr[i]);
 }
 
 int main() {
-int[3] arr;
+int arr[3];
 f(arr);
 return 0;
 }
