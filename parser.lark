@@ -52,7 +52,7 @@
     | type NAME array_append*
 
 
-?string: DOUBLE_QUOTE NAME  DOUBLE_QUOTE
+?string: DOUBLE_QUOTE /[^\n]/*  DOUBLE_QUOTE
 
 ?array_append: "["[sum]"]"
 
