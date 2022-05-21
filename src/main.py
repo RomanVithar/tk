@@ -1,38 +1,11 @@
-import glob
+from pathlib import Path
+from os import listdir
+from os.path import isfile, join
 
 from lark import Lark, Transformer
-import os
-
-
-class CalcTransformer(Transformer):
-    def add(self, args):
-        # print(args[0].children[0].value)
-        # print(args)
-        # print(args[1].children[0].value)
-        # a = int(args[0].children[0].value)
-        # b = int(args[1].children[0].value)
-        # return int(args[0]) + int(args[1])
-        # return a + self.product(args[1])
-        return args[0] + args[1]
-
-    def sub(self, args):
-        return args[0] - args[1]
-
-    def mul(self, args):
-        return args[0] * args[1]
-
-    def dev(self, args):
-        return args[0] / args[1]
-
-    def number(self, args):
-        return int(args[0])
-
-    def neg(self, args):
-        return -1 * int(args[0])
 
 
 grammar = """
-
 ?type: "int"
     | "float"
     | "void"
@@ -42,7 +15,7 @@ grammar = """
 ?param: var_init
 
 ?params: param ("," param )*
-    
+
 ?literal: NUMBER
     | NAME
 
@@ -75,24 +48,24 @@ grammar = """
     | NAME
     | "!" compare
 
-?if: "if" "(" or ")" "{" stmts "}" ("else" "{" stmts "}")?
+?if: "if" OPEN_PAREN or CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE ("else" OPEN_BRACE stmts CLOSE_BRACE)?
 
-?for: "for" "("type? NAME "=" sum";" or ";" (NAME "=")? sum ")" "{" stmts "}"
+?for: "for" OPEN_PAREN type? NAME EQUALLY sum";" or ";" (NAME EQUALLY)? sum CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE
 
-?while: "while" "(" or ")" "{" stmts "}"
+?while: "while" OPEN_PAREN or CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE
 
 ?return: "return" sum
 
-?var_init: type? NAME ("["[NAME | NUMBER]"]")* "=" [sum | "'" /./ "'" | OPEN_BRACE NUMBER ("," NUMBER)* CLOSE_BRACE ] 
+?var_init: type? NAME (OPEN_BRACKET[NAME | NUMBER]CLOSE_BRACKET)* EQUALLY [sum | "'" /./ "'" | OPEN_BRACE NUMBER ("," NUMBER)* CLOSE_BRACE ]
     | type NAME array_append*
 
 
-?string: DOUBLE_QUOTE /[^\n]/*  DOUBLE_QUOTE
+?string: DOUBLE_QUOTE /[^\\n]/*  DOUBLE_QUOTE
 
-?array_append: "["[sum]"]"
+?array_append: OPEN_BRACKET [sum] CLOSE_BRACKET
 
 
-?func: type NAME "(" params? ")" "{" stmts "}"
+?func: type NAME OPEN_PAREN params? CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE
 
 ?start: func*
 
@@ -115,11 +88,13 @@ grammar = """
     | NAME "(" sum? ("," sum)* ")" -> func_colling
 
 
-COMMENT: "//" /[^\n]/*
+COMMENT: "//" /[^\\n]/*
 BACKTICK     : "`"
 PERCENTAGE   : "%"
 EXCLAMATION  : "!"
-DOUBLE_QUOTE : "\""
+DOUBLE_QUOTE : "\\""
+EQUALLY: "="
+
 
 ?parens       : OPEN_PAREN | CLOSE_PAREN | OPEN_BRACKET | CLOSE_BRACKET
 OPEN_BRACKET  : "["
@@ -140,15 +115,15 @@ CLOSE_PAREN   : ")"
 %ignore WS_INLINE
 %ignore WS
 
-
           """
 parser = Lark(grammar)
-path = ''
-for filename in glob.glob(os.path.join(path, '*.txt')):
-    with open(os.path.join(os.getcwd(), filename), 'r') as f:
-        ast = parser.parse(f)
+path = "E:/tk/file/"
+only_files = [f for f in listdir(path) if isfile(join(path, f))]
+all_lines = []
+for file_name in only_files:
+    file_path = Path(path) / file_name
+    with open(file_path, 'r') as f:
+        file_content = f.read()
+        ast = parser.parse(file_content)
         print(ast.pretty())
-# , parser='lalr', transformer=CalcTransformer()
-ast = parser.parse(f)
-print(ast.pretty())
-# print(ast)
+        # print(ast)
