@@ -1,62 +1,154 @@
-from compiler_demo import program
+import glob
+
+from lark import Lark, Transformer
+import os
 
 
-def main() -> None:
-    prog1 = '''
-        int input_int(string name) {
-            if (name != "") {
-                print("Введите " + name + ": ");
-            }
-            return to_int(read());
-        }
-        float input_float(string name) {
-            if (name != "") {
-                print("Введите " + name + ": ");
-            }
-            return to_float(read());
-        }
+class CalcTransformer(Transformer):
+    def add(self, args):
+        # print(args[0].children[0].value)
+        # print(args)
+        # print(args[1].children[0].value)
+        # a = int(args[0].children[0].value)
+        # b = int(args[1].children[0].value)
+        # return int(args[0]) + int(args[1])
+        # return a + self.product(args[1])
+        return args[0] + args[1]
 
-        int g, g2 = g, g4 = 90;
+    def sub(self, args):
+        return args[0] - args[1]
 
-        int a = input_int("a");
-        float b = input_float("b"), c = input_float("c");  /* comment 1
-        int d = input_int("d");
-        */
-        for (int i = 0, j = 8; ((i <= 5)) && g; i = i + 1, print(5))
-            for(; a < b;)
-                if (a > 7 + b) {
-                    c = a + b * (2 - 1) + 0;  // comment 2
-                    string bb = "98\tура";
-                }
-                else if (a)
-                    print((c + 1) + " " + 89.89);
-        for(bool i = true;;);
+    def mul(self, args):
+        return args[0] * args[1]
 
-        int z;
-        z=0;
-    '''
-    prog2 = 'int f1(int p1, float p2) { string a = p1 + p2; int x; }'''
-    prog3 = 'for (;;);'
-    prog4 = 'int i; i = 5;'
-    prog5 = '''
-        int input_int(string name) {
-            if (name != "") {
-                print("Введите " + name + ": ");
-            }
-            return to_int(read());
+    def dev(self, args):
+        return args[0] / args[1]
 
-            // bool a() { }
-        }
-        int input_int2(string name, int a, int name2) {
-            if (name != "") {
-                print("Введите " + name + ": ");
-            }
-            return "";
-        }
-    '''
+    def number(self, args):
+        return int(args[0])
 
-    program.execute(prog1)
+    def neg(self, args):
+        return -1 * int(args[0])
 
 
-if __name__ == "__main__":
-    main()
+grammar = """
+
+?type: "int"
+    | "float"
+    | "void"
+    | "bool"
+    | "char"
+
+?param: var_init
+
+?params: param ("," param )*
+    
+?literal: NUMBER
+    | NAME
+
+?stmt: if
+    | sum ";"
+    | var_init ";"
+    | for
+    | while
+    | return ";"
+    | "print" "(" sum array_append* ")" ";"
+
+?stmts: stmt*
+
+?or: compare
+    | and
+    | or "||" and
+
+?and: compare
+    | compare "&&" compare
+
+?compare: sum "==" sum
+    | sum "!=" sum
+    | sum ">=" sum
+    | sum "<=" sum
+    | sum ">" sum
+    | sum "<" sum
+    | "true"
+    | "false"
+    | NUMBER
+    | NAME
+    | "!" compare
+
+?if: "if" "(" or ")" "{" stmts "}" ("else" "{" stmts "}")?
+
+?for: "for" "("type? NAME "=" sum";" or ";" (NAME "=")? sum ")" "{" stmts "}"
+
+?while: "while" "(" or ")" "{" stmts "}"
+
+?return: "return" sum
+
+?var_init: type? NAME ("["[NAME | NUMBER]"]")* "=" [sum | "'" /./ "'" | OPEN_BRACE NUMBER ("," NUMBER)* CLOSE_BRACE ] 
+    | type NAME array_append*
+
+
+?string: DOUBLE_QUOTE /[^\n]/*  DOUBLE_QUOTE
+
+?array_append: "["[sum]"]"
+
+
+?func: type NAME "(" params? ")" "{" stmts "}"
+
+?start: func*
+
+?sum: product
+    | sum "+" product   -> add
+    | sum "-" product   -> sub
+    | atom "++"
+    | atom "--"
+
+?product: atom
+    | product "*" atom  -> mul
+    | product "/" atom  -> div
+
+?atom: NUMBER           -> number
+    | "-" atom         -> neg
+    | NAME             -> var
+    | NAME array_append
+    | "(" sum ")"
+    | string
+    | NAME "(" sum? ("," sum)* ")" -> func_colling
+
+
+COMMENT: "//" /[^\n]/*
+BACKTICK     : "`"
+PERCENTAGE   : "%"
+EXCLAMATION  : "!"
+DOUBLE_QUOTE : "\""
+
+?parens       : OPEN_PAREN | CLOSE_PAREN | OPEN_BRACKET | CLOSE_BRACKET
+OPEN_BRACKET  : "["
+CLOSE_BRACKET : "]"
+OPEN_BRACE    : "{"
+CLOSE_BRACE   : "}"
+OPEN_PAREN    : "("
+CLOSE_PAREN   : ")"
+
+
+%import common.CNAME -> NAME
+%import common.NUMBER
+%import common.WS_INLINE
+%import common.WS
+
+
+%ignore COMMENT
+%ignore WS_INLINE
+%ignore WS
+
+
+          """
+parser = Lark(grammar)
+path = ''
+for filename in glob.glob(os.path.join(path, '*.txt')):
+    with open(os.path.join(os.getcwd(), filename), 'r') as f:
+        ast = parser.parse(f)
+        print(ast.pretty())
+# , parser='lalr', transformer=CalcTransformer()
+ast = parser.parse(f)
+print(ast.pretty())
+# print(ast)

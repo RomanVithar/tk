@@ -40,24 +40,24 @@
     | NAME
     | "!" compare
 
-?if: "if" "(" or ")" "{" stmts "}" ("else" "{" stmts "}")?
+?if: "if" OPEN_PAREN or CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE ("else" OPEN_BRACE stmts CLOSE_BRACE)?
 
-?for: "for" "("type? NAME "=" sum";" or ";" (NAME "=")? sum ")" "{" stmts "}"
+?for: "for" OPEN_PAREN type? NAME EQUALLY sum";" or ";" (NAME EQUALLY)? sum CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE
 
-?while: "while" "(" or ")" "{" stmts "}"
+?while: "while" OPEN_PAREN or CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE
 
 ?return: "return" sum
 
-?var_init: type? NAME ("["[NAME | NUMBER]"]")* "=" [sum | "'" /./ "'" | OPEN_BRACE NUMBER ("," NUMBER)* CLOSE_BRACE ] 
+?var_init: type? NAME (OPEN_BRACKET[NAME | NUMBER]CLOSE_BRACKET)* EQUALLY [sum | "'" /./ "'" | OPEN_BRACE NUMBER ("," NUMBER)* CLOSE_BRACE ]
     | type NAME array_append*
 
 
 ?string: DOUBLE_QUOTE /[^\n]/*  DOUBLE_QUOTE
 
-?array_append: "["[sum]"]"
+?array_append: OPEN_BRACKET [sum] CLOSE_BRACKET
 
 
-?func: type NAME "(" params? ")" "{" stmts "}"
+?func: type NAME OPEN_PAREN params? CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE
 
 ?start: func*
 
@@ -84,7 +84,8 @@ COMMENT: "//" /[^\n]/*
 BACKTICK     : "`"
 PERCENTAGE   : "%"
 EXCLAMATION  : "!"
-DOUBLE_QUOTE : "\""
+DOUBLE_QUOTE : "\"
+EQUALLY : "="
 
 ?parens       : OPEN_PAREN | CLOSE_PAREN | OPEN_BRACKET | CLOSE_BRACKET
 OPEN_BRACKET  : "["
@@ -104,5 +105,3 @@ CLOSE_PAREN   : ")"
 %ignore COMMENT
 %ignore WS_INLINE
 %ignore WS
-
-
