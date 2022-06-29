@@ -8,7 +8,7 @@ int main() {
         break;
       }
     }
-  count--;
+  count = count - 1;
   }
   return 0;
 }
