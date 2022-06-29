@@ -7,6 +7,7 @@ class BinOp(Enum):
     """Перечисление возможных биранных операций
     """
     ADD = '+'
+    DG = '^'
     SUB = '-'
     MUL = '*'
     DIV = '/'
@@ -243,6 +244,11 @@ def can_type_convert_to(from_type: TypeDesc, to_type: TypeDesc) -> bool:
 
 
 BIN_OP_TYPE_COMPATIBILITY = {
+    BinOp.DG: {
+        (INT, INT): INT,
+        (FLOAT, INT): FLOAT,
+        #TODO: all
+    },
     BinOp.ADD: {
         (INT, INT): INT,
         (FLOAT, FLOAT): FLOAT,

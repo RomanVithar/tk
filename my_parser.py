@@ -24,6 +24,7 @@ parser = Lark('''
     ?type: ident -> type
         | arr_type
     
+    DG:      "^"
     ADD:     "+"
     SUB:     "-"
     MUL:     "*"
@@ -58,6 +59,7 @@ parser = Lark('''
    
     ?mult: group
         | mult ( MUL | DIV | MOD ) group  -> bin_op
+        | mult DG (num|str |"(" expr ")" ) -> bin_op
 
     ?add: mult
         | add ( ADD | SUB ) mult  -> bin_op
@@ -131,13 +133,14 @@ class MyASTBuilder(InlineTransformer):
             return lambda x: x
         if item in ('bin_op', ):
             def get_bin_op_node(*args):
+                print(args[0])
+                print(args[1])
                 op = BinOp(args[1].value)
                 return BinOpNode(op, args[0], args[2],
                                  **{'token': args[1], 'line': args[1].line, 'column': args[1].column})
             return get_bin_op_node
         elif item in ('arr_type',):
             def get_arr_type_node(*args):
-                print(args[0], args[1])
                 return ArrNode(args[0], args[1],
                                 **{'token': args[0], 'line': args[0].line, 'column': args[0].column})
             return get_arr_type_node

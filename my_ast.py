@@ -220,6 +220,7 @@ class BinOpNode(ExprNode):
                         self.arg2 = type_convert(self.arg2, TypeDesc.from_base_type(arg2_type))
                         self.node_type = TypeDesc.from_base_type(compatibility[args_types])
                         return
+
             if self.arg1.node_type.base_type in TYPE_CONVERTIBILITY:
                 for arg1_type in TYPE_CONVERTIBILITY[self.arg1.node_type.base_type]:
                     args_types = (arg1_type, self.arg2.node_type.base_type)
@@ -286,34 +287,6 @@ class ArrRefNode(AstNode):
 
     def semantic_check(self, scope: IdentScope) -> None:
         pass
-
-class InNode(AstNode):
-    def __init__(self,  target: ExprNode, source: IdentNode,
-                 row: Optional[int] = None, line: Optional[int] = None, **props):
-        super().__init__(row=row, line=line, **props)
-        self.target = target
-        self.source = source
-
-    @property
-    def childs(self) -> Tuple[ExprNode, IdentNode]:
-        return self.target, self.source
-
-    def __str__(self) -> str:
-        return 'operatorin'
-
-    def semantic_check(self, scope: IdentScope) -> None:
-        self.target.semantic_check(scope)
-        self.source.semantic_check(scope)
-
-        m = scope.get_ident(self.source.node_ident.name)
-
-        if m is None:
-            self.semantic_error('Словаря не существует')
-        self.source = type_convert(self.source, TypeDesc.MAP)
-
-        self.target = type_convert(self.target, self.target.node_type, comment='тип ключа словаря')
-        self.node_type = TypeDesc.BOOL
-
 
 class ReturnNode(StmtNode):
     """Класс для представления в AST-дереве оператора return
@@ -609,15 +582,16 @@ class TypeConvertNode(ExprNode):
        (в языке программирования может быть как expression, так и statement)
     """
 
-    def __init__(self, expr: ExprNode, type_: TypeDesc,
+    def __init__(self, val, expr: ExprNode, type_: TypeDesc,
                  row: Optional[int] = None, col: Optional[int] = None, **props) -> None:
         super().__init__(row=row, col=col, **props)
+        self.val = val
         self.expr = expr
         self.type = type_
         self.node_type = type_
 
     def __str__(self) -> str:
-        return 'convert'
+        return str(self.val) # 'convert' + str(self.val)
 
     @property
     def childs(self) -> Tuple[AstNode, ...]:
@@ -639,7 +613,7 @@ def type_convert(expr: ExprNode, type_: TypeDesc, except_node: Optional[AstNode]
         return expr
     if expr.node_type.is_simple and type_.is_simple and \
             expr.node_type.base_type in TYPE_CONVERTIBILITY and type_.base_type in TYPE_CONVERTIBILITY[expr.node_type.base_type]:
-        return TypeConvertNode(expr, type_)
+        return TypeConvertNode(expr, expr, type_)
     else:
         (except_node if except_node else expr).semantic_error('Тип {0}{2} не конвертируется в {1}'.format(
             expr.node_type, type_, ' ({})'.format(comment) if comment else ''
