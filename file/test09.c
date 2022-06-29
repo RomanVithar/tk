@@ -1,6 +1,6 @@
 void f(int arr[3]) {
 for(int i=0;i<3;i++) {
-print(arr[i]);
+printf(arr[i]);
 }
 }
 
