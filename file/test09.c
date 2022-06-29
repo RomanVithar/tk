@@ -5,7 +5,7 @@ printf(arr[i]);
 }
 
 int main() {
-int arr[3];
+int [3]arr;
 f(arr);
 return 0;
 }
