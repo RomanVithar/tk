@@ -1,6 +1,6 @@
 void f(char str[], int length) {
 for(int i=0;i<length;i++) {
-print(str[i]);
+printf(str[i]);
 }
 }
 
